@@ -1,124 +1,130 @@
-# 🎵 Полнофункциональный Discord Музыкальный Бот + TikTok Зеркало
+# 🎵 Full-Featured Discord Music Bot + TikTok Auto-Embed
 
-Модульный, высокопроизводительный Discord-бот нового поколения на **Python 3.10+** и **discord.py 2.x** с расширенной поддержкой слэш-команд, интерактивных компонентов Discord UI (кнопки, выпадающие списки), фоновой многопоточной буферизацией аудиопотоков и умным перехватом ссылок TikTok.
+A modular, high-performance next-generation Discord bot built with **Python 3.10+** and **discord.py 2.x**, featuring slash commands, interactive Discord UI components (buttons, dropdown select menus), multi-threaded asynchronous audio streaming, and automatic TikTok video embedding.
 
 ---
 
-## 🌟 Основные возможности
+## 🌟 Key Features
 
-### 1. 🎶 Музыкальная система (/play)
-- **Источники аудио:**
-  - **YouTube:** видео, прямые трансляции, полноформатные плейлисты (с мгновенным стартом первого трека и фоновой загрузкой остальных).
-  - **SoundCloud:** отдельные треки и сеты.
-  - **Spotify:** интеграция со Spotify Web API (`spotipy`). Поддерживаются ссылки на одиночные треки, альбомы и плейлисты (метаданные парсятся и стримятся в высоком качестве через YouTube/SoundCloud). Если API ключи не настроены, работает встроенный **oEmbed Fallback** для одиночных треков.
-- **Живое автодополнение (Discord Autocomplete):**
-  - При вводе названия песни в параметре `/play query:` Discord мгновенно показывает выпадающий список из 5 подходящих треков с их названиями и длительностью в реальном времени.
-- **Мгновенное воспроизведение и поиск:**
-  - При отправке `/play <название>` бот автоматически выбирает лучшее совпадение (#1) и мгновенно начинает воспроизведение без лишних кликов.
-  - Дополнительная команда `/search <запрос>` позволяет вручную открыть интерактивное меню выбора из 5 треков (**Select Menu**) с превью автора, длительности и кнопкой отмены (**Cancel**).
-- **Умная очередь (Queue System):**
-  - FIFO очередь с поддержкой бесконечного зацикливания:
-    - ➡️ `Выключено` (обычный режим)
-    - 🔂 `Текущий трек` (повтор текущей песни)
-    - 🔁 `Вся очередь` (по завершении трек перемещается в конец очереди)
-  - Перемешивание очереди (`/shuffle`), удаление по номеру (`/remove`), пагинация списка треков (`/queue`).
-- **Голосовой контроллер:**
-  - Автоматическое отключение при неактивности (**Idle Timeout**, по умолчанию 5 минут).
-  - Автоматическое отключение через 30 секунд, если все пользователи вышли из голосового канала (**Empty Channel Auto-Leave**).
-  - Автоматическое подавление микрофона бота (`self_deaf=True`) для экономии серверного трафика.
+### 1. 🎶 Music Playback System (/play)
+- **Audio Sources:**
+  - **YouTube:** Videos, live streams, and playlists (with instant playback of the first track and lazy-loading for subsequent items).
+  - **SoundCloud:** Individual tracks and sets.
+  - **Spotify:** Integration via Spotify Web API (`spotipy`). Supports single tracks, albums, and playlists (metadata is extracted and streamed in high quality via YouTube/SoundCloud). If API keys are not provided, an integrated **oEmbed Fallback** resolves single tracks seamlessly.
+- **Live Autocomplete (Discord Slash Command Autocomplete):**
+  - Typing a song title in `/play query:` instantly displays a dynamic top-5 list of matching tracks with titles and durations in real-time.
+- **Instant Playback and Search:**
+  - Sending `/play <query>` selects the top match (#1) and starts playing immediately with no extra clicks.
+  - The `/search <query>` command displays an interactive **Select Menu** with top-5 results, showing author, duration, and a **Cancel** button.
+- **Smart Queue System:**
+  - FIFO queue with multiple loop modes:
+    - ➡️ `Off` (standard sequential playback)
+    - 🔂 `Track` (repeats current track; manual skip moves to the next track)
+    - 🔁 `Queue` (re-queues track at the end when finished)
+  - Queue shuffling (`/shuffle`), track removal (`/remove <index>`), and paginated queue listing (`/queue`).
+- **Voice Controller:**
+  - Automatic disconnection after inactivity (**Idle Timeout**, default 5 minutes).
+  - Automatic disconnection after 30 seconds if all users leave the voice channel (**Empty Channel Auto-Leave**).
+  - Server-side bot deafening (`self_deaf=True`) to minimize network bandwidth.
 
-### 2. 🎛️ Интерактивный плеер (Discord UI ActionRow)
-При старте трека бот отправляет Embed с обложкой, названием, ссылкой на оригинал, автором, запросившим участником и **динамическим визуальным прогресс-баром** (`🔘▬▬▬▬▬▬▬▬ 01:23 / 03:45`).
+### 2. 🎛️ Interactive Player (Discord UI ActionRow)
+When a track starts playing, the bot sends an embed containing track title, URL, uploader, requester, and a **dynamic progress bar** (`🔘▬▬▬▬▬▬▬▬ 01:23 / 03:45`).
 
-Под Embed прикреплен ряд кнопок управления:
-- ⏯️ **Пауза / Возобновить** — мгновенно переключает воспроизведение, меняет цвет и надпись кнопки и статус в Embed.
-- ⏭️ **Скип** — пропуск текущего трека (учитывает и корректно продвигает даже зацикленный трек).
-- 🔁 **Зацикливание** — переключение режима повтора по кругу: Выкл ➡️ 🔂 Трек ➡️ 🔁 Очередь.
-- ⏹️ **Стоп** — очистка очереди, остановка воспроизведения и выход из канала с деактивацией кнопок.
-- 🛡️ **Проверка прав:** только участники текущего голосового канала могут нажимать на кнопки (остальные получают персональное предупреждение).
+Attached directly below the embed is a row of interactive controls:
+- ⏯️ **Pause / Resume** — Toggles playback state, updating button styling and embed status.
+- ⏭️ **Skip** — Skips current track without skipping subsequent songs.
+- 🔁 **Loop** — Cycles loop modes: Off ➡️ 🔂 Track ➡️ 🔁 Queue.
+- ⏹️ **Stop** — Clears the queue, stops playback, and disconnects the bot from voice.
+- 🛡️ **Voice Verification:** Only members in the bot's current voice channel can interact with the controls.
 
-### 3. 📱 Автозамена ссылок TikTok
-- Слушатель `on_message` на регулярных выражениях перехватывает любые вариации ссылок:
+### 3. 📱 TikTok Integration
+- An `on_message` listener intercepts all variants of TikTok links:
   - `tiktok.com/@username/video/12345`
   - `vm.tiktok.com/ZMxxxx/`
   - `vt.tiktok.com/ZSxxxx/`
   - `tiktok.com/t/ZTxxxx/`
-- Заменяет ссылку на нативное зеркало (по умолчанию `vxtiktok.com` или `tnktok.com`), которое Discord может воспроизводить прямо в чате без сторонних переходов.
-- **Режимы работы (переключаются в .env):**
-  - `suppress` (рекомендуемый): скрывает кривое/пустое стандартное превью Discord у сообщения пользователя и отправляет ссылку-зеркало.
-  - `resend`: удаляет сообщение пользователя (при наличии прав) и отправляет ссылку от его имени с сохранением его текстового комментария.
+- Downloads and uploads the native video directly into chat, or replaces the link with an embeddable mirror (`vxtiktok.com`).
+- Configurable settings via `.env`:
+  - `TIKTOK_SEND_VIDEO=true`: Downloads and sends video file up to 25MB.
+  - `TIKTOK_DELETE_ORIGINAL=true`: Deletes original message to prevent duplicates.
+  - Manual command `/tiktok <url>` for on-demand video downloads.
 
 ---
 
-## 📁 Структура проекта
+## 📁 Project Structure
 
 ```
 musicbot/
 │
-├── .env.example              # Пример переменных окружения с документацией
-├── .gitignore                # Исключения для Git (env, venv, логи, кэш)
-├── requirements.txt          # Зависимости Python
-├── README.md                 # Полная документация проекта
-├── bot.py                    # Главный файл запуска (бот, Cogs loader, error handler)
-├── config.py                 # Валидация и загрузка настроек из .env
+├── .env.example              # Sample environment variables with documentation
+├── .env                      # Active local configuration (git-ignored)
+├── .gitignore                # Git ignore rules (env, venv, logs, cache)
+├── requirements.txt          # Python dependencies
+├── run.bat                   # Windows one-click startup script
+├── start.bat                 # Short launch alias
+├── README.md                 # Project documentation
+├── bot.py                    # Main entry point (bot initialization, Cogs loader, error handler)
+├── config.py                 # Configuration validation and environment loader
 │
-├── core/                     # Ядро системы
+├── core/                     # Core system
 │   ├── __init__.py
-│   ├── logger.py             # Цветной вывод в консоль + ротация логов в bot.log
-│   ├── errors.py             # Кастомные исключения и централизованный App Command Error Handler
-│   └── checks.py             # Декораторы проверки Voice State, Permissions и совпадения каналов
+│   ├── logger.py             # ANSI color console logger and rotating file log (bot.log)
+│   ├── errors.py             # Custom exceptions and centralized App Command Error Handler
+│   └── checks.py             # Voice state, permissions, and channel matching checks
 │
-├── music/                    # Музыкальная подсистема
+├── music/                    # Music subsystem
 │   ├── __init__.py
-│   ├── source.py             # YTDLSource, Track dataclass, аудиопотоки FFmpeg, топ-5 поиск
-│   ├── spotify.py            # Spotify Web API интеграция + oEmbed fallback
-│   ├── queue.py              # FIFO очередь треков, режимы зацикливания, перемешивание
-│   ├── player.py             # Музыкальный контроллер гильдии, прогресс-бар, таймер простоя
-│   └── views.py              # Discord UI: Select Menu поиска, кнопки плеера, пагинация очереди
+│   ├── source.py             # YTDLSource, Track dataclass, FFmpeg audio streams, search
+│   ├── spotify.py            # Spotify Web API client + oEmbed fallback
+│   ├── queue.py              # FIFO music queue, loop modes, shuffle
+│   ├── player.py             # Guild-level MusicPlayer controller, progress bar, idle timer
+│   └── views.py              # Discord UI: select dropdown, player buttons, queue pagination
 │
-├── cogs/                     # Модули расширений (Cogs)
+├── cogs/                     # Bot extensions (Cogs)
 │   ├── __init__.py
-│   ├── music.py              # Слэш-команды (/play, /pause, /skip, /queue, /volume...)
-│   ├── tiktok.py             # Перехватчик сообщений TikTok и слэш-команда /tiktok
-│   └── general.py            # Общие команды (/help, /ping, /info)
+│   ├── music.py              # Slash commands (/play, /pause, /skip, /queue, /volume, etc.)
+│   ├── tiktok.py             # TikTok message listener and /tiktok slash command
+│   └── general.py            # General utility commands (/help, /ping, /info)
 │
-├── tests/                    # Набор юнит- и интеграционных тестов
-│   ├── test_components.py    # Тесты очереди, зацикливания, regex TikTok и Spotify
-│   ├── test_live_search.py   # Тест онлайн-поиска yt-dlp
-│   ├── test_live_track_stream.py # Тест извлечения реального потока и FFmpeg
-│   └── test_spotify_oembed.py # Тест Spotify oEmbed fallback
+├── tests/                    # Unit and integration test suite
+│   ├── test_components.py    # Queue, loop modes, TikTok & Spotify regex tests
+│   ├── test_player_flow.py   # Playback lifecycle, skip logic, playlist handling
+│   ├── test_autocomplete_and_search.py # Autocomplete and top-5 search tests
+│   ├── test_live_search.py   # Live yt-dlp search test
+│   ├── test_live_track_stream.py # Audio stream extraction & FFmpeg test
+│   └── test_spotify_oembed.py # Spotify oEmbed metadata extraction test
 │
-└── logs/                     # Автоматически создаваемая директория логов
+└── logs/                     # Automatically created log directory
     └── bot.log
 ```
 
 ---
 
-## ⚙️ Установка системных зависимостей
+## ⚙️ System Dependencies
 
-Для воспроизведения звука в голосовых каналах Discord требуются две системные зависимости: **FFmpeg** и библиотека **Opus**.
+Playing audio in Discord voice channels requires two system dependencies: **FFmpeg** and **Opus**.
 
-### 1. Установка FFmpeg
+### 1. Installing FFmpeg
 
 #### 🪟 Windows:
-Способ 1 (через пакетный менеджер Windows Terminal):
+Method 1 (via Windows Terminal / winget):
 ```powershell
 winget install Gyan.FFmpeg
 ```
-или через Scoop:
+or via Scoop:
 ```powershell
 scoop install ffmpeg
 ```
-или через Chocolatey:
+or via Chocolatey:
 ```powershell
 choco install ffmpeg
 ```
 
-Способ 2 (вручную):
-1. Скачайте сборку `ffmpeg-release-full.7z` с официального сайта: [gyan.dev/ffmpeg/builds](https://www.gyan.dev/ffmpeg/builds/).
-2. Распакуйте архив в папку `C:\ffmpeg`.
-3. Добавьте `C:\ffmpeg\bin` в системную переменную `PATH` (Параметры Windows -> О системе -> Дополнительные параметры системы -> Переменные среды -> Path -> Создать).
-4. Откройте новый терминал и проверьте:
+Method 2 (Manual):
+1. Download `ffmpeg-release-full.7z` from [gyan.dev/ffmpeg/builds](https://www.gyan.dev/ffmpeg/builds/).
+2. Extract the archive into `C:\ffmpeg`.
+3. Add `C:\ffmpeg\bin` to your system `PATH` environment variable.
+4. Open a new terminal and verify:
    ```powershell
    ffmpeg -version
    ```
@@ -141,55 +147,55 @@ brew install ffmpeg opus
 
 ---
 
-### 2. Библиотека Opus (PyNaCl)
-- В `discord.py 2.x` кодирование голоса осуществляется через модуль **PyNaCl**.
-- Он уже включен в файл `requirements.txt` (`PyNaCl>=1.5.0`) и содержит скомпилированную библиотеку Opus для Windows, Linux и macOS. Отдельно ставить DLL файлы на Windows **не требуется**.
+### 2. Opus Library (PyNaCl)
+- In `discord.py 2.x`, voice encoding is powered by **PyNaCl**.
+- It is included in `requirements.txt` (`PyNaCl>=1.5.0`) and provides bundled Opus binaries for Windows, Linux, and macOS. No separate DLL installation is needed on Windows.
 
 ---
 
-## 🚀 Настройка и запуск бота
+## 🚀 Setup & Launch
 
-### Шаг 1. Создание бота в Discord Developer Portal
-1. Перейдите на [Discord Developer Portal](https://discord.com/developers/applications).
-2. Нажмите **"New Application"**, введите имя бота и подтвердите создание.
-3. Перейдите во вкладку **"Bot"**:
-   - Нажмите **"Reset Token"** и скопируйте токен бота (он понадобится для `.env`).
-   - В разделе **"Privileged Gateway Intents"** обязательно **ВКЛЮЧИТЕ**:
-     - ✅ **Message Content Intent** (нужен для перехвата ссылок TikTok в сообщениях).
-     - ✅ **Server Members Intent** (рекомендуется для отслеживания участников каналов).
-4. Перейдите во вкладку **"OAuth2" -> "URL Generator"**:
-   - В **Scopes** отметьте: `bot`, `applications.commands`.
-   - В **Bot Permissions** отметьте:
-     - `Send Messages`, `Embed Links`, `Attach Files`, `Read Message History`, `Manage Messages` (для TikTok модуля).
-     - `Connect`, `Speak`, `Use Voice Activity` (для Музыкального плеера).
-   - Скопируйте полученную ссылку внизу и добавьте бота на свой Discord-сервер.
+### Step 1. Create a Bot in Discord Developer Portal
+1. Navigate to the [Discord Developer Portal](https://discord.com/developers/applications).
+2. Click **"New Application"**, enter a name for the bot, and confirm.
+3. Open the **"Bot"** tab:
+   - Click **"Reset Token"** and copy the bot token (needed for `.env`).
+   - Under **"Privileged Gateway Intents"**, enable:
+     - ✅ **Message Content Intent** (required for TikTok auto-detection in chat).
+     - ✅ **Server Members Intent** (recommended for tracking member voice states).
+4. Open the **"OAuth2" -> "URL Generator"** tab:
+   - Under **Scopes**, select: `bot`, `applications.commands`.
+   - Under **Bot Permissions**, select:
+     - `Send Messages`, `Embed Links`, `Attach Files`, `Read Message History`, `Manage Messages` (for TikTok module).
+     - `Connect`, `Speak`, `Use Voice Activity` (for Music player).
+   - Copy the generated invite link at the bottom and authorize the bot on your server.
 
 ---
 
-### Шаг 2. (Опционально) Настройка Spotify Web API
-Для извлечения плейлистов и альбомов Spotify (одиночные треки работают даже без этого шага):
-1. Перейдите на [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
-2. Войдите в свой аккаунт и нажмите **"Create App"**.
-3. Введите название приложения, укажите `http://localhost` в поле Redirect URI.
-4. Откройте вкладку **"Settings"** и скопируйте:
+### Step 2. (Optional) Configure Spotify Web API
+For loading full Spotify playlists and albums (single tracks work without this step via oEmbed):
+1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+2. Log in and click **"Create App"**.
+3. Name your application and specify `http://localhost` as the Redirect URI.
+4. In the app settings, copy:
    - **Client ID**
    - **Client Secret**
 
 ---
 
-### Шаг 3. Установка и запуск проекта
+### Step 3. Installation and Running
 
-1. Клонируйте репозиторий или перейдите в директорию проекта:
+1. Clone or navigate to the project directory:
    ```bash
    cd c:/Script/musicbot
    ```
 
-2. Создайте виртуальное окружение Python (рекомендуется Python 3.10 или 3.11):
+2. Create a Python virtual environment (Python 3.10+ recommended):
    ```bash
    python -m venv venv
    ```
 
-3. Активируйте виртуальное окружение:
+3. Activate the virtual environment:
    - **Windows (PowerShell):**
      ```powershell
      .\venv\Scripts\Activate.ps1
@@ -199,51 +205,56 @@ brew install ffmpeg opus
      source venv/bin/activate
      ```
 
-4. Установите зависимости:
+4. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-5. Создайте файл конфигурации `.env` на основе примера:
+5. Configure `.env`:
    ```bash
    cp .env.example .env
    ```
-   Откройте `.env` и вставьте ваш `DISCORD_TOKEN`, а также (по желанию) `SPOTIFY_CLIENT_ID` и `SPOTIFY_CLIENT_SECRET`.
+   Open `.env` and set your `DISCORD_TOKEN`, along with optional Spotify credentials and guild ID.
 
-6. Запустите бота:
-   ```bash
-   python bot.py
-   ```
+6. Launch the bot:
+   - On Windows: double-click `run.bat` or run:
+     ```powershell
+     .\venv\Scripts\python.exe bot.py
+     ```
+   - On Linux / macOS:
+     ```bash
+     python bot.py
+     ```
 
 ---
 
-## 📋 Список команд
+## 📋 Slash Commands Reference
 
-| Слэш-команда | Описание |
+| Slash Command | Description |
 | :--- | :--- |
-| `/play <запрос>` | Мгновенно воспроизвести трек (YouTube, SoundCloud, Spotify) с автодополнением в реальном времени |
-| `/search <запрос>` | Интерактивный поиск топ-5 треков на YouTube с выпадающим списком выбора |
-| `/pause` | Приостановить воспроизведение |
-| `/resume` | Возобновить воспроизведение |
-| `/skip` | Пропустить текущий трек |
-| `/stop` | Остановить музыку, очистить очередь и отключить бота от голосового канала |
-| `/queue [страница]` | Показать очередь воспроизведения с пагинацией |
-| `/nowplaying` | Карточка текущего трека с прогресс-баром и панелью интерактивных кнопок |
-| `/loop [off\|track\|queue]` | Переключить режим зацикливания |
-| `/shuffle` | Перемешать треки в очереди |
-| `/volume <0-100>` | Изменить уровень громкости |
-| `/remove <номер>` | Удалить трек из очереди по номеру |
-| `/tiktok <ссылка>` | Ручная генерация зеркальной ссылки для видео TikTok |
-| `/ping` | Проверка задержки WebSocket и REST API |
-| `/help` | Подробная справка по всем функциям бота |
-| `/info` | Технические параметры системы и аптайм бота |
+| `/play <query>` | Play audio (YouTube, SoundCloud, Spotify) with real-time autocomplete |
+| `/search <query>` | Interactive search for top 5 YouTube tracks with a dropdown selection menu |
+| `/pause` | Pause current playback |
+| `/resume` | Resume paused playback |
+| `/skip` | Skip current track |
+| `/stop` | Stop playback, clear queue, and disconnect from voice channel |
+| `/queue` | Display current playback queue with pagination |
+| `/nowplaying` | Show currently playing track card with dynamic progress bar and interactive controls |
+| `/loop [off\|track\|queue]` | Change loop mode |
+| `/shuffle` | Shuffle tracks in the queue |
+| `/volume <0-100>` | Adjust playback volume |
+| `/remove <index>` | Remove a track from the queue by position |
+| `/tiktok <url>` | Download and send a TikTok video directly to chat |
+| `/ping` | Display WebSocket latency and REST API roundtrip time |
+| `/help` | Detailed guide and command reference |
+| `/info` | Technical information, system environment, and uptime |
 
 ---
 
-## 🧪 Запуск автоматических тестов
+## 🧪 Running Automated Tests
 
-В проект включен комплект тестов:
+Run the full automated test suite with:
 ```powershell
 .\venv\Scripts\python.exe -m unittest discover tests
 ```
-Тесты проверяют работу очереди, логику зацикливания треков, регулярные выражения TikTok, Spotify oEmbed и интеграцию с `yt-dlp`.
+The test suite validates queue operations, loop transitions, single-skip behavior, playlist handling, TikTok and Spotify regex patterns, oEmbed extraction, and live audio stream initialization.
