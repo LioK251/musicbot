@@ -1,0 +1,34 @@
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Logs
+logs/
+*.log
+
+# Audio downloads cache (if any)
+downloads/
+cache/
+
+# IDE & Editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific
+Thumbs.db
+Desktop.ini
+.DS_Store
