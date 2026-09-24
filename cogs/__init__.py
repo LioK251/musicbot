@@ -1,3 +1,1 @@
-"""
-Пакет cogs: модули расширений бота (Music, TikTok, General).
-"""
+from __future__ import annotations

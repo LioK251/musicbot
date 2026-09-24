@@ -1,6 +1,4 @@
-"""
-Тесты компонентов: очередь, зацикливание, регулярные выражения TikTok и Spotify, прогресс-бар.
-"""
+from __future__ import annotations
 
 import unittest
 from music.queue import MusicQueue, LoopMode
@@ -45,7 +43,7 @@ class TestTikTokRegex(unittest.TestCase):
             self.assertIsNotNone(match, f"URL should match: {url}")
 
     def test_text_with_tiktok_url(self):
-        text = "Смотри какой смешной видос https://vm.tiktok.com/ZM8abcde/ лол"
+        text = "Check out this video https://vm.tiktok.com/ZM8abcde/ lol"
         matches = TIKTOK_REGEX.findall(text)
         self.assertEqual(len(matches), 1)
         self.assertEqual(matches[0], "https://vm.tiktok.com/ZM8abcde/")
@@ -92,14 +90,12 @@ class TestMusicQueue(unittest.TestCase):
         self.queue.add(t1)
         self.queue.add(t2)
 
-        self.queue.get_next()  # current = t1
+        self.queue.get_next()
         self.queue.loop_mode = LoopMode.TRACK
 
-        # При LOOP_TRACK следующий get_next должен возвращать тот же трек
         self.assertEqual(self.queue.get_next().title, "Song 1")
         self.assertEqual(self.queue.get_next().title, "Song 1")
 
-        # Принудительный скип должен продвинуть очередь
         skipped = self.queue.force_skip()
         self.assertEqual(skipped.title, "Song 2")
 
@@ -109,13 +105,13 @@ class TestMusicQueue(unittest.TestCase):
         self.queue.add(t1)
         self.queue.add(t2)
 
-        self.queue.get_next()  # current = t1
+        self.queue.get_next()
         self.queue.loop_mode = LoopMode.QUEUE
 
-        next_t = self.queue.get_next()  # current = t2, t1 уходит в конец очереди
+        next_t = self.queue.get_next()
         self.assertEqual(next_t.title, "Song 2")
 
-        next_t3 = self.queue.get_next()  # снова t1
+        next_t3 = self.queue.get_next()
         self.assertEqual(next_t3.title, "Song 1")
 
     def test_remove(self):
@@ -136,15 +132,12 @@ class TestMusicQueue(unittest.TestCase):
         t3 = make_test_track("Track 3")
         self.queue.extend([t1, t2, t3])
 
-        # Первый трек начинает играть
         curr = self.queue.get_next()
         self.assertEqual(curr.title, "Track 1")
 
-        # Пользователь нажимает Скип (is_skip=True)
         next_track = self.queue.get_next(is_skip=True)
-        self.assertEqual(next_track.title, "Track 2")  # Track 2 НЕ пропускается!
+        self.assertEqual(next_track.title, "Track 2")
 
-        # Track 2 закончился сам
         next_track = self.queue.get_next(is_skip=False)
         self.assertEqual(next_track.title, "Track 3")
 
@@ -152,17 +145,14 @@ class TestMusicQueue(unittest.TestCase):
         tracks = [make_test_track(f"Song {i}") for i in range(1, 6)]
         self.queue.extend(tracks)
 
-        # Старт первого трека
         curr = self.queue.get_next()
         self.assertEqual(curr.title, "Song 1")
 
-        # Последовательно скипаем каждую песню и проверяем, что ни одна не теряется
         for i in range(2, 6):
             skipped_to = self.queue.get_next(is_skip=True)
             self.assertIsNotNone(skipped_to)
             self.assertEqual(skipped_to.title, f"Song {i}")
 
-        # Скип последнего трека переводит очередь в пустое состояние
         empty = self.queue.get_next(is_skip=True)
         self.assertIsNone(empty)
         self.assertTrue(self.queue.is_empty)
@@ -175,13 +165,13 @@ class TestMusicQueue(unittest.TestCase):
         self.assertEqual(t2.formatted_duration, "01:01:05")
 
         t_live = make_test_track(duration=0)
-        self.assertEqual(t_live.formatted_duration, "🔴 Прямой эфир")
+        self.assertEqual(t_live.formatted_duration, "🔴 Live Stream")
 
 
 class TestTikTokConversion(unittest.TestCase):
     def test_convert_tiktok_url(self):
         from cogs.tiktok import TikTokCog
-        cog = TikTokCog(None)  # type: ignore
+        cog = TikTokCog(None)
         url = "https://www.tiktok.com/@user/video/123456"
         converted = cog._convert_tiktok_url(url)
         self.assertIn("vxtiktok.com", converted)
@@ -193,18 +183,15 @@ class TestPlayerEmbed(unittest.TestCase):
         class FakeGuild:
             id = 999
             name = "TestGuild"
-        player = MusicPlayer(FakeGuild(), None)  # type: ignore
+        player = MusicPlayer(FakeGuild(), None)
         player.queue.current = make_test_track("Cool Song", 200)
         embed = player.build_now_playing_embed()
         self.assertIsNotNone(embed.description)
         self.assertIn("Cool Song", embed.description)
         self.assertIn("Test Artist", embed.description)
-        self.assertEqual(len(embed.fields), 0)  # Minimalist design has 0 bulky fields
+        self.assertEqual(len(embed.fields), 0)
 
     def test_queue_embed_limits_with_long_tracks(self):
-        """Проверяет, что эмбеды очереди с длинными URL и названиями не превышают лимиты Discord (1024/4096)."""
-        from cogs.music import MusicCog
-        # Создаем 50 треков с длинными названиями и URL
         long_title = "Very Long Song Title " * 5
         long_url = "https://www.youtube.com/watch?v=12345678901&list=PL12345678901234567890&index=1"
         tracks = [make_test_track(f"{i}. {long_title}", duration=200) for i in range(50)]
@@ -215,7 +202,7 @@ class TestPlayerEmbed(unittest.TestCase):
         total_pages = 5
         for p in range(total_pages):
             page_tracks = tracks[p * PAGE_SIZE : (p + 1) * PAGE_SIZE]
-            desc_lines = ["**🎶 Сейчас играет:**\nTest • @User\n\n**Далее в очереди (50 треков):**"]
+            desc_lines = ["**🎶 Now Playing:**\nTest • @User\n\n**Up Next (50 tracks):**"]
             for i, t in enumerate(page_tracks, start=p * PAGE_SIZE + 1):
                 clean_title = " ".join(t.title.split())[:45]
                 desc_lines.append(f"`{i}.` [{clean_title}]({t.webpage_url}) (`{t.formatted_duration}`) • {t.requester.mention}")
@@ -225,6 +212,3 @@ class TestPlayerEmbed(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

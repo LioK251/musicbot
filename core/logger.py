@@ -1,8 +1,3 @@
-"""
-Модуль расширенного логгирования бота.
-Поддерживает вывод в консоль с цветным форматированием и запись в файл с ротацией.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -10,15 +5,12 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 import sys
 
-# Директория для логов
 LOGS_DIR = Path(__file__).resolve().parent.parent / "logs"
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOGS_DIR / "bot.log"
 
 
 class ColorFormatter(logging.Formatter):
-    """Кастомный форматтер консоли с цветовым оформлением ANSI."""
-
     GREY = "\x1b[38;20m"
     BLUE = "\x1b[34;20m"
     CYAN = "\x1b[36;20m"
@@ -44,7 +36,6 @@ class ColorFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-# Обеспечиваем безопасный вывод UTF-8 (эмодзи и кириллица) в консоли Windows
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
@@ -58,25 +49,18 @@ if hasattr(sys.stderr, "reconfigure"):
 
 
 def setup_logger(name: str = "DiscordBot", level: int = logging.INFO) -> logging.Logger:
-    """
-    Настраивает и возвращает настроенный логгер с выводом в консоль и файл.
-    Также настраивает логирование для подсистем discord.player и discord.voice_state.
-    """
     logger = logging.getLogger(name)
 
-    # Предотвращаем дублирование обработчиков
     if logger.hasHandlers():
         return logger
 
     logger.setLevel(level)
 
-    # 1. Консольный обработчик
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level)
     console_handler.setFormatter(ColorFormatter())
     logger.addHandler(console_handler)
 
-    # 2. Файловый обработчик с ротацией (макс. 5 файлов по 5 МБ)
     file_formatter = logging.Formatter(
         "%(asctime)s │ %(levelname)-8s │ %(name)-20s │ %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
@@ -87,11 +71,10 @@ def setup_logger(name: str = "DiscordBot", level: int = logging.INFO) -> logging
         backupCount=5,
         encoding="utf-8",
     )
-    file_handler.setLevel(logging.DEBUG)  # В файл пишем подробнее
+    file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
 
-    # Добавляем файловый обработчик также к логгеру discord.player и discord.voice_state для диагностики звука
     for sub_logger_name in ("discord.player", "discord.voice_state", "discord.voice_client"):
         sub_log = logging.getLogger(sub_logger_name)
         sub_log.setLevel(logging.DEBUG)
@@ -99,7 +82,6 @@ def setup_logger(name: str = "DiscordBot", level: int = logging.INFO) -> logging
             sub_log.addHandler(file_handler)
             sub_log.addHandler(console_handler)
 
-    # Настройки уровней для внешних библиотек
     logging.getLogger("discord").setLevel(logging.INFO)
     logging.getLogger("discord.http").setLevel(logging.WARNING)
     logging.getLogger("discord.gateway").setLevel(logging.WARNING)

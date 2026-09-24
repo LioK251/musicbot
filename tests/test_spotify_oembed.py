@@ -1,6 +1,4 @@
-"""
-Тестирование Spotify oEmbed извлечения.
-"""
+from __future__ import annotations
 
 import sys
 import unittest
@@ -13,7 +11,6 @@ from music.spotify import spotify_client
 
 class TestSpotifyOEmbed(unittest.IsolatedAsyncioTestCase):
     async def test_extract_track_oembed(self):
-        # Реальная ссылка на трек Spotify
         url = "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
         data = await spotify_client.extract_metadata(url)
         self.assertEqual(data["type"], "track")

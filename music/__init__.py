@@ -1,3 +1,1 @@
-"""
-Пакет music: аудиоисточники, очередь, воспроизведение, интеграция Spotify и UI компоненты.
-"""
+from __future__ import annotations
